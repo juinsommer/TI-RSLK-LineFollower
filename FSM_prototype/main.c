@@ -5,11 +5,11 @@
 #include "../inc/LaunchPad.h"
 #include "../inc/SysTickInts.h"
 #include "../inc/CortexM.h"
+#include "../inc/BumpInt.h"
 
 void motorState(uint8_t state);
 void bubbleSort(void);
 void SysTick_Handler(void);
-void bubbleSort(void);
 
 struct State {
   uint32_t out;                // 2-bit output
