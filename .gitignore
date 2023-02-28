@@ -5,3 +5,5 @@ dvt/
 .*
 .*/
 !.gitignore
+!.cproject
+!.ccsproject
