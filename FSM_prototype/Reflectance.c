@@ -1,10 +1,11 @@
 #include <stdint.h>
-#include "msp432.h"
+#include "msp.h"
 #include "../inc/Clock.h"
 
 const int32_t w[] = {33400,23800,14300,4800,-4800,-14300,-23800,-33400};
 
 void Reflectance_Init(void){
+
     // Configure P5.3 control even as output
     P5->SEL0 &= ~BIT3;
     P5->SEL1 &= ~BIT3;
@@ -46,8 +47,8 @@ uint8_t Reflectance_Read(uint32_t time){
         result = P7IN;
 
     // Turn off IR LEDs
-    P5OUT &= ~BIT3;
-    P9OUT &= ~BIT2;
+    P5->OUT &= ~BIT3;
+    P9->OUT &= ~BIT2;
 
     return result; // Return 8-bit sensor value
 }
@@ -65,21 +66,54 @@ uint8_t Reflectance_Position(uint8_t data){
         }
     }
 
-    int32_t distance = numerator/denominator;
+    int32_t distance;
+    distance = numerator/denominator;
+
     uint8_t state;
 
+    // Lost
     if(numerator == 0)
-        return 0x0;
+        state = 0x3;
 
-    if(distance > 23800)
+    // Go Left
+    if(distance > 4800)
         state = 0x2;
 
-    else if(distance < -23800)
+    // Go right
+    if(distance < -4800)
         state = 0x1;
 
-    else if(distance > 0 && distance < 4800)
+    // Go forward
+    if(distance > -4800 && distance < 4800)
         state = 0x0;
 
+    else
+        state = 0x3;
+
     return state;
+}
+
+void Reflectance_Start(void){
+    // Turn on LEDs
+    P5->OUT |= BIT3;
+    P9->OUT |= BIT2;
+
+    P7->DIR = 0xFF; // Configure as output
+    P7->OUT = 0xFF; // Charge capacitors
+
+    Clock_Delay1us(10);
+    P7->DIR = 0x00; // Configure as input
+}
+
+uint8_t Reflectance_End(void){
+    uint8_t result;
+
+    result = (P7->IN&0xFF); // Read sensors
+
+    // Turn off LEDs
+    P5->OUT &= ~BIT3;
+    P9->OUT &= ~BIT2;
+
+    return result;
 }
 

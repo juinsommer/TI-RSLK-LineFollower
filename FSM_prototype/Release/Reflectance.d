@@ -11,7 +11,7 @@ Reflectance.obj: /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/machine/_types.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/machine/_stdint.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/sys/_stdint.h
-Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp432.h
+Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp432p401r.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp_compatibility.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp432p401r_classic.h
@@ -43,7 +43,7 @@ Reflectance.obj: ../../inc/Clock.h
 
 /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/sys/_stdint.h:
 
-/home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp432.h:
+/home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp.h:
 
 /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/msp432p401r.h:
 

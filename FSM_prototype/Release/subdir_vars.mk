@@ -8,9 +8,10 @@ CMD_SRCS += \
 
 C_SRCS += \
 ../Clock.c \
+../CortexM.c \
 ../LaunchPad.c \
 ../Reflectance.c \
-../SysTick.c \
+../SysTickInts.c \
 ../main.c \
 ../motorControl.c \
 ../startup_msp432p401r_ccs.c \
@@ -18,9 +19,10 @@ C_SRCS += \
 
 C_DEPS += \
 ./Clock.d \
+./CortexM.d \
 ./LaunchPad.d \
 ./Reflectance.d \
-./SysTick.d \
+./SysTickInts.d \
 ./main.d \
 ./motorControl.d \
 ./startup_msp432p401r_ccs.d \
@@ -28,9 +30,10 @@ C_DEPS += \
 
 OBJS += \
 ./Clock.obj \
+./CortexM.obj \
 ./LaunchPad.obj \
 ./Reflectance.obj \
-./SysTick.obj \
+./SysTickInts.obj \
 ./main.obj \
 ./motorControl.obj \
 ./startup_msp432p401r_ccs.obj \
@@ -38,9 +41,10 @@ OBJS += \
 
 OBJS__QUOTED += \
 "Clock.obj" \
+"CortexM.obj" \
 "LaunchPad.obj" \
 "Reflectance.obj" \
-"SysTick.obj" \
+"SysTickInts.obj" \
 "main.obj" \
 "motorControl.obj" \
 "startup_msp432p401r_ccs.obj" \
@@ -48,9 +52,10 @@ OBJS__QUOTED += \
 
 C_DEPS__QUOTED += \
 "Clock.d" \
+"CortexM.d" \
 "LaunchPad.d" \
 "Reflectance.d" \
-"SysTick.d" \
+"SysTickInts.d" \
 "main.d" \
 "motorControl.d" \
 "startup_msp432p401r_ccs.d" \
@@ -58,9 +63,10 @@ C_DEPS__QUOTED += \
 
 C_SRCS__QUOTED += \
 "../Clock.c" \
+"../CortexM.c" \
 "../LaunchPad.c" \
 "../Reflectance.c" \
-"../SysTick.c" \
+"../SysTickInts.c" \
 "../main.c" \
 "../motorControl.c" \
 "../startup_msp432p401r_ccs.c" \
