@@ -1,12 +1,20 @@
 #include <stdint.h>
 #include "msp.h"
-#include "../inc/Clock.h"
+#include "../inc/CortexM.h"
+#include "../inc/PWM.h"
 
-void Motor_InitSimple(void){
-// Initializes the 6 GPIO lines and puts driver to sleep
-// Returns right away
-// initialize P5.4 and P5.5 and make them outputs
+#define PERIOD 7500
 
+// ------------Motor_Init------------
+// Initialize GPIO pins for output, which will be
+// used to control the direction of the motors and
+// to enable or disable the drivers.
+// The motors are initially stopped, the drivers
+// are initially powered down, and the PWM speed
+// control is uninitialized.
+// Input: none
+// Output: none
+void Motor_Init(void){
     // P5.4 - left motor, P5.5 - right motor
     P5->SEL0 &= ~(BIT4|BIT5);
     P5->SEL1 &= ~(BIT4|BIT5);
@@ -25,111 +33,73 @@ void Motor_InitSimple(void){
     P2->DIR |= BIT6|BIT7;
     P2->OUT &= ~(BIT6|BIT7);
 
-    // Measure output pin P1.6
-    P1->SEL0 &= ~(BIT6|BIT7);
-    P1->SEL1 &= ~(BIT6|BIT7);
-    P1->DIR |= BIT6;
-    P1->OUT &= ~BIT6;
+    PWM_Init34(PERIOD,0,0);
 }
 
-void Motor_StopSimple(void){
-// Stops both motors, puts driver to sleep
-// Returns right away
-  P2->OUT &= ~(BIT4|BIT5);   // off
-  P3->OUT &= ~(BIT6|BIT7);   // low current sleep mode
-}
-void Motor_ForwardSimple(uint16_t duty, uint32_t time){
-// Drives both motors forward at duty (100 to 9900)
-// Runs for time duration (units=10ms), and then stops
-// Stop the motors and return if any bumper switch is active
-// Returns after time*10ms or if a bumper switch is hit
+// ------------Motor_Stop------------
+// Stop the motors, power down the drivers, and
+// set the PWM speed control to 0% duty cycle.
+// Input: none
+// Output: none
+void Motor_Stop(void){
+  // write this as part of Lab 3
+    // Stops both motors, puts driver to sleep
+    // Returns right away
+      //P1->OUT &= ~0xC0;
+      P2->OUT &= ~0xC0;   // off
+      P3->OUT &= ~0xC0;   // low current sleep mode
 
-    uint32_t L, i;
-    L = 10000 - (uint32_t)duty;
-    P5->OUT &= ~(BIT4|BIT5); // Set forward direction
-    P3->OUT |= BIT6|BIT7; // Wake both motors
-
-    for(i = 0; i < time; i++){
-        P2->OUT |= BIT6|BIT7;
-        Clock_Delay1us((uint32_t)duty);
-        P2->OUT &= ~(BIT6|BIT7);
-        Clock_Delay1us(L);
-    }
-    Motor_StopSimple();
-}
-void Motor_BackwardSimple(uint16_t duty, uint32_t time){
-// Drives both motors backward at duty (100 to 9900)
-// Runs for time duration (units=10ms), and then stops
-// Runs even if any bumper switch is active
-// Returns after time*10ms
-
-    uint32_t L, i;
-    L = 10000 - (uint32_t)duty;
-    P5->OUT |= BIT4|BIT5; // Set backwards direction
-    P3->OUT |= BIT6|BIT7; // Wake both motors
-
-    for(i = 0; i < time; i++){
-        P2->OUT |= BIT6|BIT7;
-        Clock_Delay1us((uint32_t)duty);
-        P2->OUT &= ~(BIT6|BIT7);
-        Clock_Delay1us(L);
-    }
-    Motor_StopSimple();
 }
 
-void Motor_LeftSimple(uint16_t duty, uint32_t time){
-// Drives just the left motor forward at duty (100 to 9900)
-// Right motor is stopped (sleeping)
-// Runs for time duration (units=10ms), and then stops
-// Stop the motor and return if any bumper switch is active
-// Returns after time*10ms or if a bumper switch is hit
-    uint32_t L, i;
-    L = 10000 - (uint32_t)duty;
-    P3->OUT |= BIT7; // Wake left motor
-    P3->OUT &= ~BIT6; // Sleep right motor
-    P5->OUT &= ~BIT4; // Set forward direction
+// ------------Motor_Forward------------
+// Drive the robot forward by running left and
+// right wheels forward with the given duty
+// cycles.
+// Input: leftDuty  duty cycle of left wheel (0 to 14,998)
+//        rightDuty duty cycle of right wheel (0 to 14,998)
+// Output: none
+// Assumes: Motor_Init() has been called
+void Motor_Forward(uint16_t leftDuty, uint16_t rightDuty){
 
-   for(i = 0; i < time; i++){
-      P2->OUT |= BIT7;
-      Clock_Delay1us((uint32_t)duty);
-      P2->OUT &= ~BIT7;
-      Clock_Delay1us(L);
-   }
-   Motor_StopSimple();
+        // Forward direction
+        P5->OUT &= ~0xC0;
+        P3->OUT |= 0xC0;
+        PWM_Duty3(rightDuty);
+        PWM_Duty4(leftDuty);
 }
 
+// ------------Motor_Right------------
+// Turn the robot to the right by running the
+// left wheel forward and the right wheel
+// backward with the given duty cycles.
+// Input: leftDuty  duty cycle of left wheel (0 to 14,998)
+//        rightDuty duty cycle of right wheel (0 to 14,998)
+// Output: none
+// Assumes: Motor_Init() has been called
+void Motor_Right(uint16_t leftDuty, uint16_t rightDuty){
 
-void Motor_RightSimple(uint16_t duty, uint32_t time){
-// Drives just the right motor forward at duty (100 to 9900)
-// Left motor is stopped (sleeping)
-// Runs for time duration (units=10ms), and then stops
-// Stop the motor and return if any bumper switch is active
-// Returns after time*10ms or if a bumper switch is hit
-    uint32_t L, i;
-    L = 10000 - (uint32_t)duty;
+    P3 -> OUT |= 0xC0;  // nSleep = 1
+    P5 -> OUT &= ~0x10; // P5.4 PH = 0
+    P5 -> OUT |= 0x20; // P5.5 PH = 1
+    PWM_Duty4(leftDuty);
+    PWM_Duty3(rightDuty);
 
-    P3->OUT |= BIT6; // Wake right motor
-    P3->OUT &= ~BIT7; // Sleep left motor
-    P5->OUT &= BIT4; // Set forward direction
-
-    for(i = 0; i < time; i++){
-        P2->OUT |= BIT6;
-        Clock_Delay1us((uint32_t)duty);
-        P2->OUT &= ~BIT6;
-        Clock_Delay1us(L);
-    }
-    Motor_StopSimple();
 }
 
-void testPeriod(uint16_t H, uint32_t time) {
-    uint32_t i, L;
-    L = 10000-(uint32_t)H;
+// ------------Motor_Left------------
+// Turn the robot to the left by running the
+// left wheel backward and the right wheel
+// forward with the given duty cycles.
+// Input: leftDuty  duty cycle of left wheel (0 to 14,998)
+//        rightDuty duty cycle of right wheel (0 to 14,998)
+// Output: none
+// Assumes: Motor_Init() has been called
+void Motor_Left(uint16_t leftDuty, uint16_t rightDuty){
 
-    for(i = 0; i < time; i++){
-        P1->OUT |= BIT6;
-        Clock_Delay1us((uint32_t)H);
+    P3 -> OUT |= 0xC0;  // nSleep = 1
+    P5 -> OUT |= 0x10; // P5.4 PH = 1
+    P5 -> OUT &= ~0x20; // P5.5 PH = 0
+    PWM_Duty4(leftDuty);
+    PWM_Duty3(rightDuty);
 
-        P1->OUT &= ~BIT6;
-        Clock_Delay1us(L);
-    }
 }
