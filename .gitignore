@@ -1,0 +1,9 @@
+Debug/
+Release/
+RemoteSystemsTempFiles/
+dvt/
+.*
+.*/
+!.gitignore
+!.cproject
+!.ccsproject

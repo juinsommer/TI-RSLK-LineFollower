@@ -5,6 +5,7 @@
 #include "../inc/LaunchPad.h"
 #include "../inc/SysTickInts.h"
 #include "../inc/CortexM.h"
+#include "../inc/BumpInt.h"
 
 void motorState(uint8_t state);
 void SysTick_Handler(void);
