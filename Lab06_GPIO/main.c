@@ -13,7 +13,7 @@ void collision(uint8_t);
 
 struct State {
   uint32_t out;                // 2-bit output
-  const struct State *next[4]; // Next if 2-bit input is 0-3
+  const struct State *next[6]; // Next if 2-bit input is 0-3
 };
 typedef const struct State State_t;
 
@@ -25,18 +25,22 @@ typedef const struct State State_t;
 #define SearchL  &fsm[5]
 #define SearchR  &fsm[6]
 #define Lost     &fsm[7]
+#define HLeft    &fsm[8]
+#define HRight   &fsm[9]
 
-State_t fsm[8]={
-//          00      01      10     11
-    {0x1, {Center, Left, Right, SearchF}},   // Center
+State_t fsm[10]={
+//          00      01      10     11     100     101
+    {0x1, {Center, Left, Right, SearchF, HLeft, HRight}},   // Center
 
-    {0x2, {Center, Left, Right, SearchF}},   // Left
-    {0x3, {Center, Left, Right, SearchF}},   // Right
-    {0x4, {Center, Left, Right, SearchB}},   // SearchF
-    {0x5, {Center, Left, Right, SearchL}},   // SearchB
-    {0x6, {Center, Left, Right, SearchR}},   // SearchL
-    {0x7, {Center, Left, Right, Lost}},      // SearchR
-    {0x8, {Lost, Lost,  Lost,  Lost }}       // Lost
+    {0x2, {Center, Left, Right, SearchF, HLeft, HRight }},   // Left
+    {0x3, {Center, Left, Right, SearchF, HLeft, HRight}},   // Right
+    {0x4, {Center, Left, Right, SearchB, HLeft, HRight}},   // SearchF
+    {0x5, {Center, Left, Right, SearchL, HLeft, HRight}},   // SearchB
+    {0x6, {Center, Left, Right, SearchR, HLeft, HRight}},   // SearchL
+    {0x7, {Center, Left, Right, Lost,    HLeft, HRight}},   // SearchR
+    {0x8, {Lost,   Lost, Lost,  Lost,    Lost, Lost }},     // Lost
+    {0x9, {Center, Left, Right, SearchF, HLeft, HRight }},  // HLeft
+    {0xA, {Center, Left, Right, SearchF, HLeft, HRight }}   // HRight
 };
 
 State_t *Spt;  // pointer to the current state
@@ -66,17 +70,17 @@ void motorState(uint8_t state) {
             Motor_Forward(3000, 3000); // Center
             break;
         case 0x2:
-            Motor_Left(1000, 2500); // Left
+            Motor_Left(0, 2000); // Left
             break;
         case 0x3:
-            Motor_Right(2500, 1000); // Right
+            Motor_Right(2000, 0); // Right
             break;
         case 0x4:
-            Motor_Forward(2000, 2000); // SearchF
+            Motor_Forward(3000, 3000); // SearchF
             Clock_Delay1ms(50);
             break;
         case 0x5:
-            Motor_Backward(2000, 2000); // SearchB
+            Motor_Backward(3000, 3000); // SearchB
             Clock_Delay1ms(150);
             break;
         case 0x6:
@@ -88,6 +92,13 @@ void motorState(uint8_t state) {
             Clock_Delay1ms(300);
         case 0x8:
             Motor_Stop(); // Lost
+            break;
+        case 0x9:
+            Motor_Left(3000, 3000); // Hard Left
+            break;
+        case 0xA:
+            Motor_Right(3000, 3000); // Hard Right
+            break;
         default:
             break;
     }
