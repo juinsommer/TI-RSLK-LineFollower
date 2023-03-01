@@ -19,7 +19,7 @@ Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/core_cm4.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_compiler.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_ccs.h
 Reflectance.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h
-Reflectance.obj: ../../inc/Clock.h
+Reflectance.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Clock.h
 
 ../Reflectance.c:
 
@@ -59,5 +59,5 @@ Reflectance.obj: ../../inc/Clock.h
 
 /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h:
 
-../../inc/Clock.h:
+/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Clock.h:
 

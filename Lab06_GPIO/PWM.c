@@ -42,7 +42,7 @@ void PWM_Init12(uint16_t period, uint16_t duty1, uint16_t duty2){
 // Outputs: none
 // period of P2.6 is 2*period*666.7ns, duty cycle is duty1/period
 void PWM_Duty1(uint16_t duty1){
-  //if(duty1 >= TIMER_A0->CCR[0]) return; // bad input
+  if(duty1 >= TIMER_A0->CCR[0]) return; // bad input
   TIMER_A0->CCR[3] = duty1;        // CCR1 duty cycle is duty1/period
 }
 
@@ -51,6 +51,6 @@ void PWM_Duty1(uint16_t duty1){
 // Inputs:  duty2
 // Outputs: none// period of P2.7 is 2*period*666.7ns, duty cycle is duty2/period
 void PWM_Duty2(uint16_t duty2){
-  //if(duty2 >= TIMER_A0->CCR[0]) return; // bad input
+  if(duty2 >= TIMER_A0->CCR[0]) return; // bad input
   TIMER_A0->CCR[4] = duty2;        // CCR2 duty cycle is duty2/period
 }

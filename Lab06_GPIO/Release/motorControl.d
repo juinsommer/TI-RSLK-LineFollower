@@ -19,8 +19,8 @@ motorControl.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/core_cm4.
 motorControl.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_compiler.h
 motorControl.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_ccs.h
 motorControl.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h
-motorControl.obj: ../../inc/CortexM.h
-motorControl.obj: ../../inc/PWM.h
+motorControl.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/CortexM.h
+motorControl.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/PWM.h
 
 ../motorControl.c:
 
@@ -60,7 +60,7 @@ motorControl.obj: ../../inc/PWM.h
 
 /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h:
 
-../../inc/CortexM.h:
+/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/CortexM.h:
 
-../../inc/PWM.h:
+/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/PWM.h:
 
