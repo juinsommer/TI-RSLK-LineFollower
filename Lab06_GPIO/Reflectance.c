@@ -69,25 +69,32 @@ uint8_t Reflectance_Position(uint8_t data){
     int32_t distance;
     distance = numerator/denominator;
 
-    uint8_t state;
-
-    // Go forward
-    if(distance > -7000 && distance < 7000)
-        state = 0x0;
-
     // Lost
     if(distance == 0)
-        state = 0x3;
+        return 0x3;
+
+    // Go forward
+    if(distance > -10000 && distance < 10000)
+        return 0x0;
 
     // Go Left
-    if(distance > 7000)
-        state = 0x2;
+    if(distance > 10000 && distance < 20000)
+        return 0x2;
 
     // Go right
-    if(distance < -7000)
-        state = 0x1;
+    if(distance < -10000 && distance > -20000)
+        return 0x1;
 
-    return state;
+    // Go Hard Right
+    if(distance > 20000)
+        return 0x5;
+
+    // Go Hard Left
+    if(distance < -20000)
+        return 0x4;
+
+    else
+        return 0x3;
 }
 
 void Reflectance_Start(void){
