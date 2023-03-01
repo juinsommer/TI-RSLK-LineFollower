@@ -2,13 +2,13 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-CG_TOOL_ROOT := /home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS
+CG_TOOL_ROOT := /home/jcacal/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
-"./Bump.obj" \
+"./BumpInt.obj" \
 "./Clock.obj" \
 "./CortexM.obj" \
 "./LaunchPad.obj" \
@@ -148,22 +148,22 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 Lab06_GPIO.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"/home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --advice:power=all --define=__MSP432P401R__ --define=TARGET_IS_MSP432P4XX --define=ccs -g --c99 --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"Lab06_GPIO.map" --heap_size=1024 --stack_size=512 -i"/home/juin/ti/ccs1210/ccs/ccs_base/arm/include" -i"/home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"/home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="Lab06_GPIO_linkInfo.xml" --rom_model -o "Lab06_GPIO.out" $(ORDERED_OBJS)
+	"/home/jcacal/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --advice:power=all --define=__MSP432P401R__ --define=TARGET_IS_MSP432P4XX --define=ccs -g --c99 --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"Lab06_GPIO.map" --heap_size=1024 --stack_size=512 -i"/home/jcacal/ti/ccs1210/ccs/ccs_base/arm/include" -i"/home/jcacal/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"/home/jcacal/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="Lab06_GPIO_linkInfo.xml" --rom_model -o "Lab06_GPIO.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 Lab06_GPIO.hex: $(EXE_OUTPUTS)
 	@echo 'Building secondary target: "$@"'
 	@echo 'Invoking: Arm Hex Utility'
-	"/home/juin/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armhex" --memwidth=8 --romwidth=8 --diag_wrap=off -o "Lab06_GPIO.hex" $(EXE_OUTPUTS__QUOTED)
+	"/home/jcacal/ti/ccs1210/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armhex" --memwidth=8 --romwidth=8 --diag_wrap=off -o "Lab06_GPIO.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building secondary target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "Bump.obj" "Clock.obj" "CortexM.obj" "LaunchPad.obj" "PWM.obj" "Reflectance.obj" "SysTickInts.obj" "main.obj" "motorControl.obj" "startup_msp432p401r_ccs.obj" "system_msp432p401r.obj" 
-	-$(RM) "Bump.d" "Clock.d" "CortexM.d" "LaunchPad.d" "PWM.d" "Reflectance.d" "SysTickInts.d" "main.d" "motorControl.d" "startup_msp432p401r_ccs.d" "system_msp432p401r.d" 
+	-$(RM) "BumpInt.obj" "Clock.obj" "CortexM.obj" "LaunchPad.obj" "PWM.obj" "Reflectance.obj" "SysTickInts.obj" "main.obj" "motorControl.obj" "startup_msp432p401r_ccs.obj" "system_msp432p401r.obj" 
+	-$(RM) "BumpInt.d" "Clock.d" "CortexM.d" "LaunchPad.d" "PWM.d" "Reflectance.d" "SysTickInts.d" "main.d" "motorControl.d" "startup_msp432p401r_ccs.d" "system_msp432p401r.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
