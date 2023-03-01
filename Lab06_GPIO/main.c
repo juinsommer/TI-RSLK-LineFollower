@@ -8,7 +8,6 @@
 #include "../inc/BumpInt.h"
 
 void motorState(uint8_t state);
-void bubbleSort(void);
 void SysTick_Handler(void);
 void collision(uint8_t);
 
@@ -22,25 +21,22 @@ typedef const struct State State_t;
 #define Left     &fsm[1]
 #define Right    &fsm[2]
 #define SearchF  &fsm[3]
-#define SearchA  &fsm[4]
-#define Lost     &fsm[5]
+#define SearchB  &fsm[4]
+#define SearchL  &fsm[5]
+#define SearchR  &fsm[6]
+#define Lost     &fsm[7]
 
-//#define Right1  &fsm[6]
-//#define Right2  &fsm[7]
-//#define Right3  &fsm[8]
-//#define Right4  &fsm[9]
-//#define Right5  &fsm[10]
-//#define Lost    &fsm[11]
-
-State_t fsm[6]={
+State_t fsm[8]={
 //          00      01      10     11
     {0x1, {Center, Left, Right, SearchF}},   // Center
 
     {0x2, {Center, Left, Right, SearchF}},   // Left
     {0x3, {Center, Left, Right, SearchF}},   // Right
-    {0x4, {Center, Left, Right, SearchA}},   // SearchF
-    {0x5, {Center, Left, Right, SearchF}},   // SearchA
-    {0x6, {Lost, Lost,  Lost,  Lost }},      // Lost
+    {0x4, {Center, Left, Right, SearchB}},   // SearchF
+    {0x5, {Center, Left, Right, SearchL}},   // SearchB
+    {0x6, {Center, Left, Right, SearchR}},   // SearchL
+    {0x7, {Center, Left, Right, Lost}},      // SearchR
+    {0x8, {Lost, Lost,  Lost,  Lost }}       // Lost
 };
 
 State_t *Spt;  // pointer to the current state
@@ -52,7 +48,7 @@ int main(void){
   Clock_Init48MHz();
   Motor_Init();
   Reflectance_Init();
-  SysTick_Init(4800000,2); // 1kHz interrupts
+  SysTick_Init(48000, 2);
   LaunchPad_Init();
   BumpInt_Init(&collision);
 
@@ -60,38 +56,38 @@ int main(void){
 
   EnableInterrupts();
 
-  while(1){
+  while(1)
       WaitForInterrupt();
-  }
-
-
 }
 
 void motorState(uint8_t state) {
     switch(state){
         case 0x1:
-            Motor_Forward(1500, 1500); // Center
-            //Clock_Delay1ms(50);
+            Motor_Forward(3000, 3000); // Center
             break;
         case 0x2:
-            Motor_Left(1500, 1500); // Left
-            //Clock_Delay1ms(50);
+            Motor_Left(2000, 2000); // Left
             break;
         case 0x3:
-            Motor_Right(1500, 1500); // Right
-            //Clock_Delay1ms(50);
+            Motor_Right(2000, 2000); // Right
             break;
         case 0x4:
-            Motor_Forward(1500, 1500); // SearchF
-            //Clock_Delay1ms(50);
+            Motor_Forward(2000, 2000); // SearchF
+            Clock_Delay1ms(50);
             break;
         case 0x5:
-            Motor_Left(1500, 1500);
-            //Clock_Delay1ms(50);
+            Motor_Backward(2000, 2000); // SearchB
+            Clock_Delay1ms(100);
             break;
         case 0x6:
-            Motor_Stop(); // Lost
+            Motor_Left(2000, 2000); // Search Left
+            Clock_Delay1ms(150);
             break;
+        case 0x7:
+            Motor_Right(2000, 2000); // Search right
+            Clock_Delay1ms(300);
+        case 0x8:
+            Motor_Stop(); // Lost
         default:
             break;
     }
