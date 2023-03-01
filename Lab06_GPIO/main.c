@@ -81,7 +81,7 @@ void motorState(uint8_t state) {
             break;
         case 0x5:
             Motor_Backward(3000, 3000); // SearchB
-            Clock_Delay1ms(150);
+            Clock_Delay1ms(100);
             break;
         case 0x6:
             Motor_Left(3000, 3000); // Search Left
