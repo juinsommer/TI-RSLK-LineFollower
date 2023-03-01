@@ -7,7 +7,7 @@ CMD_SRCS += \
 ../msp432p401r.cmd 
 
 C_SRCS += \
-../Bump.c \
+../BumpInt.c \
 ../Clock.c \
 ../CortexM.c \
 ../LaunchPad.c \
@@ -20,7 +20,7 @@ C_SRCS += \
 ../system_msp432p401r.c 
 
 C_DEPS += \
-./Bump.d \
+./BumpInt.d \
 ./Clock.d \
 ./CortexM.d \
 ./LaunchPad.d \
@@ -33,7 +33,7 @@ C_DEPS += \
 ./system_msp432p401r.d 
 
 OBJS += \
-./Bump.obj \
+./BumpInt.obj \
 ./Clock.obj \
 ./CortexM.obj \
 ./LaunchPad.obj \
@@ -46,7 +46,7 @@ OBJS += \
 ./system_msp432p401r.obj 
 
 OBJS__QUOTED += \
-"Bump.obj" \
+"BumpInt.obj" \
 "Clock.obj" \
 "CortexM.obj" \
 "LaunchPad.obj" \
@@ -59,7 +59,7 @@ OBJS__QUOTED += \
 "system_msp432p401r.obj" 
 
 C_DEPS__QUOTED += \
-"Bump.d" \
+"BumpInt.d" \
 "Clock.d" \
 "CortexM.d" \
 "LaunchPad.d" \
@@ -72,7 +72,7 @@ C_DEPS__QUOTED += \
 "system_msp432p401r.d" 
 
 C_SRCS__QUOTED += \
-"../Bump.c" \
+"../BumpInt.c" \
 "../Clock.c" \
 "../CortexM.c" \
 "../LaunchPad.c" \
