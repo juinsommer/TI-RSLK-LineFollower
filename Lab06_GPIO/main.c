@@ -66,17 +66,17 @@ void motorState(uint8_t state) {
             Motor_Forward(3000, 3000); // Center
             break;
         case 0x2:
-            Motor_Left(1500, 2000); // Left
+            Motor_Left(1000, 2500); // Left
             break;
         case 0x3:
-            Motor_Right(2000, 1500); // Right
+            Motor_Right(2500, 1000); // Right
             break;
         case 0x4:
-            Motor_Forward(3000, 3000); // SearchF
+            Motor_Forward(2000, 2000); // SearchF
             Clock_Delay1ms(50);
             break;
         case 0x5:
-            Motor_Backward(3000, 3000); // SearchB
+            Motor_Backward(2000, 2000); // SearchB
             Clock_Delay1ms(150);
             break;
         case 0x6:

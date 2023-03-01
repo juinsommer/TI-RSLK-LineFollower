@@ -72,7 +72,7 @@ uint8_t Reflectance_Position(uint8_t data){
     uint8_t state;
 
     // Go forward
-    if(distance > -4800 && distance < 4800)
+    if(distance > -7000 && distance < 7000)
         state = 0x0;
 
     // Lost
@@ -80,11 +80,11 @@ uint8_t Reflectance_Position(uint8_t data){
         state = 0x3;
 
     // Go Left
-    if(distance > 4800)
+    if(distance > 7000)
         state = 0x2;
 
     // Go right
-    if(distance < -4800)
+    if(distance < -7000)
         state = 0x1;
 
     return state;
