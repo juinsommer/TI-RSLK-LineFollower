@@ -10,6 +10,7 @@
 void motorState(uint8_t state);
 void bubbleSort(void);
 void SysTick_Handler(void);
+void collision(uint8_t);
 
 struct State {
   uint32_t out;                // 2-bit output
@@ -53,6 +54,7 @@ int main(void){
   Reflectance_Init();
   SysTick_Init(4800000,2); // 1kHz interrupts
   LaunchPad_Init();
+  BumpInt_Init(&collision);
 
   Spt = Center;
 
@@ -114,5 +116,20 @@ void SysTick_Handler(void){
     count++;
     if(count == 10)
         count = 0;
+}
+
+void collision(uint8_t bump){
+    switch(bump){
+    case BIT0:
+    case BIT2:
+    case BIT3:
+    case BIT5:
+    case BIT6:
+    case BIT7:
+        Motor_Stop();
+        break;
+    default:
+        break;
+    }
 }
 
