@@ -74,23 +74,23 @@ uint8_t Reflectance_Position(uint8_t data){
         return 0x3;
 
     // Go forward
-    if(distance > -10000 && distance < 10000)
+    if(distance > -4800 && distance < 4800)
         return 0x0;
 
     // Go Left
-    if(distance > 10000 && distance < 20000)
+    if(distance > 4800 && distance < 10000)
         return 0x2;
 
     // Go right
-    if(distance < -10000 && distance > -20000)
+    if(distance < -4800 && distance > -10000)
         return 0x1;
 
     // Go Hard Right
-    if(distance > 20000)
+    if(distance > 10000)
         return 0x5;
 
     // Go Hard Left
-    if(distance < -20000)
+    if(distance < -10000)
         return 0x4;
 
     else
