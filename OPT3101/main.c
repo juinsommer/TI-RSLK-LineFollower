@@ -11,6 +11,9 @@
 #include "../inc/UART0.h"
 #include "../inc/SSD1306.h"
 #include "../inc/FFT.h"
+#include "stdio.h"
+#include "string.h"
+
 
 void collision(uint8_t);
 
@@ -184,6 +187,7 @@ void Controller_Right(void){ // runs at 100 Hz
 
 void main(void){ // wallFollow wall following implementation
   int i = 0;
+  char command;
   uint32_t channel = 1;
   DisableInterrupts();
   Clock_Init48MHz();
@@ -211,40 +215,45 @@ void main(void){ // wallFollow wall following implementation
   Mode = 1;
 
   while(1){
-    if(TxChannel <= 2){ // 0,1,2 means new data
-      if(TxChannel==0){
-        if(Amplitudes[0] > 1000){
-          LeftDistance = FilteredDistances[0] = Left(LPF_Calc(Distances[0]));
-        }else{
-          LeftDistance = FilteredDistances[0] = 500;
-        }
-      }else if(TxChannel==1){
-        if(Amplitudes[1] > 1000){
-          CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
-        }else{
-          CenterDistance = FilteredDistances[1] = 500;
-        }
-      }else {
-        if(Amplitudes[2] > 1000){
-          RightDistance = FilteredDistances[2] = Right(LPF_Calc3(Distances[2]));
-        }else{
-          RightDistance = FilteredDistances[2] = 500;
-        }
-      }
-      printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
-      printf("Center Distance %d\n\r", CenterDistance);
+    command = UART0_InChar(); //calling UART0_InChar function
 
-      TxChannel = 3; // 3 means no data
-      channel = (channel+1)%3;
-      OPT3101_StartMeasurementChannel(channel);
-      i = i + 1;
+    while(command == 'G') //if the input via Bluetooth is "G"
+    {
+        if(TxChannel <= 2){ // 0,1,2 means new data
+          if(TxChannel==0){
+            if(Amplitudes[0] > 1000){
+              LeftDistance = FilteredDistances[0] = Left(LPF_Calc(Distances[0]));
+            }else{
+              LeftDistance = FilteredDistances[0] = 500;
+            }
+          }else if(TxChannel==1){
+            if(Amplitudes[1] > 1000){
+              CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
+            }else{
+              CenterDistance = FilteredDistances[1] = 500;
+            }
+          }else {
+            if(Amplitudes[2] > 1000){
+              RightDistance = FilteredDistances[2] = Right(LPF_Calc3(Distances[2]));
+            }else{
+              RightDistance = FilteredDistances[2] = 500;
+            }
+          }
+          printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
+          printf("Center Distance %d\n\r", CenterDistance);
+
+          TxChannel = 3; // 3 means no data
+          channel = (channel+1)%3;
+          OPT3101_StartMeasurementChannel(channel);
+          i = i + 1;
+        }
+
+        Controller();
+        if(i >= 100)
+            i = 0;
+
+        WaitForInterrupt();
     }
-
-    Controller();
-    if(i >= 100)
-        i = 0;
-
-    WaitForInterrupt();
   }
 }
 
@@ -262,4 +271,3 @@ void collision(uint8_t bump){
         break;
     }
 }
-
