@@ -50,7 +50,7 @@ uint8_t Bump_Read(void){
 // triggered on touch, falling edge
 void PORT4_IRQHandler(void){
     // write this as part of Lab 14
-//    P4->IFG &= ~0xED;
+    P4->IFG &= ~0xED;
     uint8_t Switch; //variables to store the read data
     Switch = Bump_Read(); //read the bump switches
 
