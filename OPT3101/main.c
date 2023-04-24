@@ -12,6 +12,8 @@
 #include "../inc/SSD1306.h"
 #include "../inc/odometry.h"
 #include "../inc/blinker.h"
+#include "../inc/Tachometer.h"
+#include "../inc/TimerA1.h"
 
 // Prototype functions
 void collision(uint8_t);
@@ -138,54 +140,22 @@ void Controller(void){ // runs at 100 Hz
     if(UL > (PWMNOMINAL+SWING)) UL = PWMMAX;
 
     if((RightDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        Motor_Right(4000, 4000);
-    }
-
-    else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        Motor_Left(4000,4000);
-    }
-
-    Motor_Forward(UL,UR);
-
-  }
-}
-
-void Controller_Right(void){ // runs at 100 Hz
-  if(Mode){
-    if((RightDistance>DESIRED)){
-      SetPoint = (RightDistance)/2;
-    }else{
-      SetPoint = DESIRED;
-    }
-    /*if(LeftDistance < RightDistance ){
-      Error = LeftDistance-SetPoint;
-    }else {
-      Error = SetPoint-RightDistance;
-    }*/
-
-    Error = SetPoint-RightDistance;
-    UR = PWMNOMINAL+Kp*Error; // proportional control
-    UR = UR + Ki*Error;      // adjust right motor
-    UL = PWMNOMINAL-Kp*Error; // proportional control
-    UL = UL + Ki*Error;
-
-    if(UR < (PWMNOMINAL-SWING)) UR = PWMNOMINAL-SWING; // 3,000 to 7,000
-    if(UR > (PWMNOMINAL+SWING)) UR = PWMNOMINAL+SWING;
-    if(UL < (PWMNOMINAL-SWING)) UL = PWMNOMINAL-SWING; // 3,000 to 7,000
-    if(UL > (PWMNOMINAL+SWING)) UL = PWMNOMINAL+SWING;
-
-    //turns left if the center measurement and right measurement is small enough that we will hit the wall if we don't turn
-    if((RightDistance<250) && (CenterDistance <250)){
         UL = 0;
         UR = PWMNOMINAL;
     }
 
+    else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
+        UR = 0;
+        UL = PWMNOMINAL;
+    }
+
     Motor_Forward(UL,UR);
 
   }
 }
+extern enum RobotState Action;
 
-void main(void){ // wallFollow wall following implementation
+void main(void){
   int i = 0;
   uint32_t channel = 1;
   DisableInterrupts();
@@ -196,9 +166,11 @@ void main(void){ // wallFollow wall following implementation
   Motor_Stop(); // initialize and stop
   I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
   UART0_Initprintf();
+  Action = ISSTOPPED;
+  Blinker_Init();
   Odometry_Init(0,0, NORTH);
-  Init();
-  Clear();
+  Tachometer_Init();
+  TimerA1_Init(&UpdatePosition,20000); // every 40ms
   printf("\nHallway Racer\n\r");
   OPT3101_Init();
   OPT3101_Setup();
@@ -220,7 +192,7 @@ void main(void){ // wallFollow wall following implementation
     if(TxChannel <= 2){ // 0,1,2 means new data
       if(TxChannel==0){
         if(Amplitudes[0] > 1000){
-          LeftDistance = FilteredDistances[0] = Left(LPF_Calc(Distances[0]));
+          LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
         }else{
           LeftDistance = FilteredDistances[0] = 500;
         }
@@ -232,7 +204,7 @@ void main(void){ // wallFollow wall following implementation
         }
       }else {
         if(Amplitudes[2] > 1000){
-          RightDistance = FilteredDistances[2] = Right(LPF_Calc3(Distances[2]));
+          RightDistance = FilteredDistances[2] = LPF_Calc3(Distances[2]);
         }else{
           RightDistance = FilteredDistances[2] = 500;
         }
@@ -255,7 +227,7 @@ void main(void){ // wallFollow wall following implementation
 }
 
 void recover(){
-    Motor_Backward(2000,2000);
+    Motor_Backward(3000,3000);
     Clock_Delay1ms(2000);
     Motor_Stop();
     Clock_Delay1ms(500);
