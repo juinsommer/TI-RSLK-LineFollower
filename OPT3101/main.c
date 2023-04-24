@@ -25,6 +25,7 @@
 // Prototype functions
 void collision(uint8_t);
 void recover();
+void publish_string(char*,char*);
 
 //#define USEOLED 0
 #define USEUART
@@ -88,16 +89,16 @@ void UartClear(void){UART0_OutString("\n\r");};
 /*
  * MQTT server and topic properties that shall be modified per application
  */
-#define MQTT_BROKER_SERVER  "broker.mqttdashboard.com"
-#define SUBSCRIBE_TOPIC "command"
-#define PUBLISH_TOPIC "mcu/bump"
-#define PUBLISH_TOPIC_PWM "mcu/pwm"
+#define MQTT_BROKER_SERVER  "broker.hivemq.com"
+#define PUBLISH_TOPIC_STATUS "status"
 
 // MQTT message buffer size
 #define BUFF_SIZE 32
 
 Network n;
 Client hMQTTClient;     // MQTT Client
+
+uint8_t isCrash = 0;
 
 unsigned char macAddressVal[SL_MAC_ADDR_LEN];
 unsigned char macAddressLen = SL_MAC_ADDR_LEN;
@@ -518,15 +519,28 @@ void main(void){
   rc = MQTTConnect(&hMQTTClient, &cdata);
 
   if (rc != 0) {
-      CLI_Write(" Failed to start MQTT client \n\r");
+      printf(" Failed to start MQTT client \n\r");
       LOOP_FOREVER();
   }
-  CLI_Write(" Started MQTT client successfully \n\r");
+  printf(" Started MQTT client successfully \n\r");
   // ================ MQTT SETUP ======================
 
   Mode = 1;
 
   while(1){
+    if(isCrash){
+          isCrash = 0;
+          publish_string(PUBLISH_TOPIC_STATUS, "Crashed");
+          Clock_Delay1ms(1000);
+      }
+
+    publish_string(PUBLISH_TOPIC_STATUS, "Running");
+
+    if (rc != 0) {
+      printf(" Failed to publish collision to MQTT broker \n\r");
+      LOOP_FOREVER();
+    }
+    printf(" Published collision successfully \n\r");
     Odometry_Init(0,0,NORTH);
 
     if(TxChannel <= 2){ // 0,1,2 means new data
@@ -566,6 +580,24 @@ void main(void){
   }
 }
 
+void publish_string(char* topic, char* payload){
+    int rc = 0;
+    MQTTMessage msg;
+    msg.dup = 0;
+    msg.id = 0;
+    msg.payload = payload;
+    msg.payloadlen = 8;
+    msg.qos = QOS0;
+    msg.retained = 0;
+    rc = MQTTPublish(&hMQTTClient, topic, &msg);
+
+    if (rc != 0) {
+        printf(" Failed to publish collision to MQTT broker \n\r");
+        LOOP_FOREVER();
+    }
+    printf(" Published collision successfully \n\r");
+}
+
 void recover(){
     Motor_Backward(3000,3000);
     Clock_Delay1ms(2000);
@@ -581,6 +613,7 @@ void collision(uint8_t bump){
     case BIT5:
     case BIT6:
     case BIT7:
+        isCrash = 1;
         Motor_Stop();
         Clock_Delay1ms(1000);
         recover();
