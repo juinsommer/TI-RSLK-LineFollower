@@ -10,7 +10,8 @@
 #include "../inc/Motor.h"
 #include "../inc/UART0.h"
 #include "../inc/SSD1306.h"
-#include "../inc/FFT.h"
+#include "../inc/odometry.h"
+#include "../inc/blinker.h"
 
 // Prototype functions
 void collision(uint8_t);
@@ -195,6 +196,7 @@ void main(void){ // wallFollow wall following implementation
   Motor_Stop(); // initialize and stop
   I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
   UART0_Initprintf();
+  Odometry_Init(0,0, NORTH);
   Init();
   Clear();
   printf("\nHallway Racer\n\r");
@@ -213,6 +215,8 @@ void main(void){ // wallFollow wall following implementation
   Mode = 1;
 
   while(1){
+    Odometry_Init(0,0,NORTH);
+
     if(TxChannel <= 2){ // 0,1,2 means new data
       if(TxChannel==0){
         if(Amplitudes[0] > 1000){
@@ -251,16 +255,10 @@ void main(void){ // wallFollow wall following implementation
 }
 
 void recover(){
-
     Motor_Backward(2000,2000);
-
     Clock_Delay1ms(2000);
-
     Motor_Stop();
-
     Clock_Delay1ms(500);
-
-
 }
 
 void collision(uint8_t bump){
