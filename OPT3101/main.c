@@ -12,7 +12,9 @@
 #include "../inc/SSD1306.h"
 #include "../inc/FFT.h"
 
+// Prototype functions
 void collision(uint8_t);
+void recover();
 
 //#define USEOLED 0
 #define USEUART
@@ -248,6 +250,19 @@ void main(void){ // wallFollow wall following implementation
   }
 }
 
+void recover(){
+
+    Motor_Backward(2000,2000);
+
+    Clock_Delay1ms(2000);
+
+    Motor_Stop();
+
+    Clock_Delay1ms(500);
+
+
+}
+
 void collision(uint8_t bump){
     switch(bump){
     case BIT0:
@@ -257,9 +272,13 @@ void collision(uint8_t bump){
     case BIT6:
     case BIT7:
         Motor_Stop();
+        Clock_Delay1ms(1000);
+        recover();
         break;
     default:
         break;
     }
 }
+
+
 
