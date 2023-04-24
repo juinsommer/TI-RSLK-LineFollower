@@ -8,7 +8,7 @@
 #include "../inc/LaunchPad.h"
 #include "../inc/BumpInt.h"
 #include "../inc/Motor.h"
-#include "../inc/UART0.h"
+#include "UART0.h"
 #include "../inc/SSD1306.h"
 #include "../inc/FFT.h"
 #include "stdio.h"
@@ -106,6 +106,7 @@ int32_t Error;
 int32_t Ki=1000;  // integral controller gain
 int32_t Kp=5;  // proportional controller gain //was 4
 int32_t UR, UL;  // PWM duty 0 to 14,998
+char command;
 
 #define TOOCLOSE 200
 #define DESIRED 250
@@ -161,7 +162,6 @@ extern enum RobotState Action;
 
 void main(void){
   int i = 0;
-  char command;
   uint32_t channel = 1;
   DisableInterrupts();
   Clock_Init48MHz();
@@ -197,6 +197,13 @@ void main(void){
 
     while(command == 'G') //if the input via Bluetooth is "G"
     {
+        command = UART0_InCharNoWait();
+        if(command == 'S'){
+            Motor_Stop();
+            break;
+        }
+        command = 'G';
+
         if(TxChannel <= 2){ // 0,1,2 means new data
           if(TxChannel==0){
             if(Amplitudes[0] > 1000){

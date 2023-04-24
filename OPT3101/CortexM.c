@@ -83,29 +83,8 @@ void EndCritical(void){
 // inputs:  none
 // outputs: none
 void WaitForInterrupt(void){
-    int stopReading = 0;
-    char command;
-    UART0_Init();
-    while(stopReading == 0){
-        if((EUSCI_A0->IFG&0x01) == 1){
-            command = UART0_InChar(); //calling UART0_InChar function
-            if (command == 'S') //if the input via Bluetooth is "S"
-            {
-              Motor_Stop(); //Stop
-              stopReading = 1;
-              main();
-            }
-        }
-        else
-        {
-            //__asm  ("    WFI\n"
-                    //"    BX     LR\n");
-            continue;
-        }
-
-
-
-    }
+    __asm  ("    WFI\n"
+            "    BX     LR\n");
 }
 	
 
