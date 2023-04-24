@@ -13,9 +13,15 @@
 #include "../inc/FFT.h"
 #include "stdio.h"
 #include "string.h"
+#include "../inc/odometry.h"
+#include "../inc/blinker.h"
+#include "../inc/Tachometer.h"
+#include "../inc/TimerA1.h"
 
 
+// Prototype functions
 void collision(uint8_t);
+void recover();
 
 //#define USEOLED 0
 #define USEUART
@@ -138,54 +144,22 @@ void Controller(void){ // runs at 100 Hz
     if(UL > (PWMNOMINAL+SWING)) UL = PWMMAX;
 
     if((RightDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        Motor_Right(4000, 4000);
-    }
-
-    else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        Motor_Left(4000,4000);
-    }
-
-    Motor_Forward(UL,UR);
-
-  }
-}
-
-void Controller_Right(void){ // runs at 100 Hz
-  if(Mode){
-    if((RightDistance>DESIRED)){
-      SetPoint = (RightDistance)/2;
-    }else{
-      SetPoint = DESIRED;
-    }
-    /*if(LeftDistance < RightDistance ){
-      Error = LeftDistance-SetPoint;
-    }else {
-      Error = SetPoint-RightDistance;
-    }*/
-
-    Error = SetPoint-RightDistance;
-    UR = PWMNOMINAL+Kp*Error; // proportional control
-    UR = UR + Ki*Error;      // adjust right motor
-    UL = PWMNOMINAL-Kp*Error; // proportional control
-    UL = UL + Ki*Error;
-
-    if(UR < (PWMNOMINAL-SWING)) UR = PWMNOMINAL-SWING; // 3,000 to 7,000
-    if(UR > (PWMNOMINAL+SWING)) UR = PWMNOMINAL+SWING;
-    if(UL < (PWMNOMINAL-SWING)) UL = PWMNOMINAL-SWING; // 3,000 to 7,000
-    if(UL > (PWMNOMINAL+SWING)) UL = PWMNOMINAL+SWING;
-
-    //turns left if the center measurement and right measurement is small enough that we will hit the wall if we don't turn
-    if((RightDistance<250) && (CenterDistance <250)){
         UL = 0;
         UR = PWMNOMINAL;
     }
 
+    else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
+        UR = 0;
+        UL = PWMNOMINAL;
+    }
+
     Motor_Forward(UL,UR);
 
   }
 }
+extern enum RobotState Action;
 
-void main(void){ // wallFollow wall following implementation
+void main(void){
   int i = 0;
   char command;
   uint32_t channel = 1;
@@ -197,8 +171,11 @@ void main(void){ // wallFollow wall following implementation
   Motor_Stop(); // initialize and stop
   I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
   UART0_Initprintf();
-  Init();
-  Clear();
+  Action = ISSTOPPED;
+  Blinker_Init();
+  Odometry_Init(0,0, NORTH);
+  Tachometer_Init();
+  TimerA1_Init(&UpdatePosition,20000); // every 40ms
   printf("\nHallway Racer\n\r");
   OPT3101_Init();
   OPT3101_Setup();
@@ -216,6 +193,7 @@ void main(void){ // wallFollow wall following implementation
 
   while(1){
     command = UART0_InChar(); //calling UART0_InChar function
+    Odometry_Init(0,0,NORTH);
 
     while(command == 'G') //if the input via Bluetooth is "G"
     {
@@ -257,6 +235,13 @@ void main(void){ // wallFollow wall following implementation
   }
 }
 
+void recover(){
+    Motor_Backward(3000,3000);
+    Clock_Delay1ms(2000);
+    Motor_Stop();
+    Clock_Delay1ms(500);
+}
+
 void collision(uint8_t bump){
     switch(bump){
     case BIT0:
@@ -266,8 +251,11 @@ void collision(uint8_t bump){
     case BIT6:
     case BIT7:
         Motor_Stop();
+        Clock_Delay1ms(1000);
+        recover();
         break;
     default:
         break;
     }
 }
+
