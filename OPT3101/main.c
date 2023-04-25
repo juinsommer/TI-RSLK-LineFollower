@@ -85,149 +85,160 @@ bool pollDistanceSensor(void){
   return false;
 }
 
-// calibrated for 500mm track
-// right is raw sensor data from right sensor
-// return calibrated distance from center of Robot to right wall
-int32_t Right(int32_t right){
-  return  (right*(59*right + 7305) + 2348974)/32768;
-}
-// left is raw sensor data from left sensor
-// return calibrated distance from center of Robot to left wall
-int32_t Left(int32_t left){
-  return (left*(59*left + 7305) + 2348974)/32768;
-}
-
 int32_t Mode=0; // 0 stop, 1 run
 int32_t Error;
-int32_t Ki=1000;  // integral controller gain
-int32_t Kp=5;  // proportional controller gain //was 4
-int32_t UR, UL;  // PWM duty 0 to 14,998
+float Ki=.1;  // integral controller gain
+int32_t Kp=2;  // proportional controller gain //was 4
+float Kd=.01;
+float UR, UL;  // PWM duty 0 to 14,998
 
-#define TOOCLOSE 200
-#define DESIRED 250
-int32_t SetPoint = 250;
+int32_t DESIRED = 500;
+int32_t SetPoint = 500;
 int32_t LeftDistance,CenterDistance,RightDistance; // mm
-#define TOOFAR 400 // was 400
+uint32_t resultX, resultY;
 
-#define PWMNOMINAL 7000 // was 2500
+#define PWMNOMINAL 5000 // was 2500
 #define SWING 500 //was 1000
 #define PWMMIN 1000
-#define PWMMAX 7500
-#define AVOIDSETPOINT 500
+#define PWMMAX 5000
+#define AVOIDSETPOINT 350
+#define HARDAVOID 300
 
 void Controller(void){ // runs at 100 Hz
-  if(Mode){
-    if((LeftDistance>DESIRED)&&(RightDistance>DESIRED)){
-      SetPoint = (LeftDistance+RightDistance)/2;
-    }
-    else
-        SetPoint = DESIRED;
+    if(Mode){
 
-    if(LeftDistance < RightDistance ){
-      Error = LeftDistance-SetPoint;
-    }
-    else{
-      Error = SetPoint-RightDistance;
-    }
+        if((LeftDistance>DESIRED)&&(RightDistance>DESIRED)){
+          SetPoint = (LeftDistance+RightDistance)/2;
+        }
+        else
+            SetPoint = DESIRED;
 
-    UR = PWMNOMINAL+Kp*Error; // proportional control
-    UR = UR + Ki*Error;      // adjust right motor
-    UL = PWMNOMINAL-Kp*Error; // proportional control
+        if(LeftDistance < RightDistance){
+          Error = LeftDistance-SetPoint;
+        }
+        else{
+          Error = SetPoint-RightDistance;
+        }
 
-    if(UR < (PWMNOMINAL-SWING)) UR = PWMMIN; // 3,000 to 7,000
-    if(UR > (PWMNOMINAL+SWING)) UR = PWMMAX;
-    if(UL < (PWMNOMINAL-SWING)) UL = PWMMIN; // 3,000 to 7,000
-    if(UL > (PWMNOMINAL+SWING)) UL = PWMMAX;
+        UR = PWMNOMINAL + Kp*Error; // proportional control
+        UR = UR + Ki*Error;      // adjust right motor
+        UL = PWMNOMINAL - Kp*Error; // proportional control
+        UL = UL - Ki*Error;
 
-    if((RightDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        UL = 0;
-        UR = PWMNOMINAL;
-    }
+        if(UR < (PWMNOMINAL-SWING)) UR = PWMMIN; // 3,000 to 7,000
+        if(UR > (PWMNOMINAL+SWING)) UR = PWMMAX;
+        if(UL < (PWMNOMINAL-SWING)) UL = PWMMIN; // 3,000 to 7,000
+        if(UL > (PWMNOMINAL+SWING)) UL = PWMMAX;
 
-    else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT)){
-        UR = 0;
-        UL = PWMNOMINAL;
-    }
+        if((RightDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT) && (LeftDistance > AVOIDSETPOINT)){
+            UR = 0;
+            UL = PWMMIN;
+        }
 
-    Motor_Forward(UL,UR);
+        else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT) && (RightDistance > AVOIDSETPOINT)){
+            UL = 0;
+            UR = PWMMIN;
+        }
 
-  }
+        if((RightDistance < HARDAVOID) && (CenterDistance < HARDAVOID) && (LeftDistance > HARDAVOID)){
+            UR = 0;
+            UL = PWMMAX;
+        }
+
+        else if((LeftDistance < HARDAVOID) && (CenterDistance < HARDAVOID) && (RightDistance > HARDAVOID)){
+            UL = 0;
+            UR = PWMMAX;
+        }
+        resultX = Odometry_GetX();
+        resultY = Odometry_GetY();
+        printf("Y pos: %d\n\r", resultY);
+
+        if(resultY < 108000000)
+            Motor_Forward(UL, UR);
+
+        else{
+            SoftLeftUntilTh(EAST);
+            Odometry_Init(0, 0, NORTH);
+        }
+     }
 }
+extern int32_t MyX,MyY;               // position in 0.0001cm
+extern int32_t MyTheta;               // direction units 2*pi/16384 radians (-pi to +pi)
 extern enum RobotState Action;
 
 void main(void){
-  int i = 0;
-  uint32_t channel = 1;
-  DisableInterrupts();
-  Clock_Init48MHz();
-  Motor_Init();
-  BumpInt_Init(&collision);
-  LaunchPad_Init(); // built-in switches and LEDs
-  Motor_Stop(); // initialize and stop
-  I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
-  UART0_Initprintf();
-  Action = ISSTOPPED;
-  Blinker_Init();
-  Odometry_Init(0,0, NORTH);
-  Tachometer_Init();
-  TimerA1_Init(&UpdatePosition,20000); // every 40ms
-  printf("\nHallway Racer\n\r");
-  OPT3101_Init();
-  OPT3101_Setup();
-  OPT3101_CalibrateInternalCrosstalk();
-  OPT3101_ArmInterrupts(&TxChannel, Distances, Amplitudes);
-  TxChannel = 3;
-  OPT3101_StartMeasurementChannel(channel);
-  LPF_Init(100,8);
-  LPF_Init2(100,8);
-  LPF_Init3(100,8);
-  UR = UL = PWMNOMINAL; //initial power
-  EnableInterrupts();
+    int i = 0;
+    uint32_t channel = 1;
+    DisableInterrupts();
+    Clock_Init48MHz();
+    Motor_Init();
+    BumpInt_Init(&collision);
+    LaunchPad_Init(); // built-in switches and LEDs
+    Motor_Stop(); // initialize and stop
+    I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
+    UART0_Initprintf();
 
-  Mode = 1;
+    Blinker_Init();
+    Odometry_Init(0,0, NORTH);
+    Action = ISSTOPPED;
+    Tachometer_Init();
+    TimerA1_Init(&UpdatePosition,20000); // every 40ms
 
-  while(1){
-    Odometry_Init(0,0,NORTH);
+    printf("\nHallway Racer\n\r");
+    OPT3101_Init();
+    OPT3101_Setup();
+    OPT3101_CalibrateInternalCrosstalk();
+    OPT3101_ArmInterrupts(&TxChannel, Distances, Amplitudes);
+    TxChannel = 3;
+    OPT3101_StartMeasurementChannel(channel);
+    LPF_Init(100,8);
+    LPF_Init2(100,8);
+    LPF_Init3(100,8);
+    UR = UL = PWMNOMINAL; //initial power
+    EnableInterrupts();
 
-    if(TxChannel <= 2){ // 0,1,2 means new data
-      if(TxChannel==0){
-        if(Amplitudes[0] > 1000){
-          LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
-        }else{
-          LeftDistance = FilteredDistances[0] = 500;
+    Mode = 1;
+
+    while(1){
+      if(TxChannel <= 2){ // 0,1,2 means new data
+        if(TxChannel==0){
+          if(Amplitudes[0] > 200){
+            LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
+          }else{
+            LeftDistance = FilteredDistances[0] = 1000;
+          }
+        }else if(TxChannel==1){
+          if(Amplitudes[1] > 200){
+            CenterDistance = FilteredDistances[1] = LPF_Calc(Distances[1]);
+          }else{
+            CenterDistance = FilteredDistances[1] = 1000;
+          }
+        }else {
+          if(Amplitudes[2] > 200){
+            RightDistance = FilteredDistances[2] = LPF_Calc2(Distances[2]);
+          }else{
+            RightDistance = FilteredDistances[2] = 1000;
+          }
         }
-      }else if(TxChannel==1){
-        if(Amplitudes[1] > 1000){
-          CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
-        }else{
-          CenterDistance = FilteredDistances[1] = 500;
-        }
-      }else {
-        if(Amplitudes[2] > 1000){
-          RightDistance = FilteredDistances[2] = LPF_Calc3(Distances[2]);
-        }else{
-          RightDistance = FilteredDistances[2] = 500;
-        }
-      }
-      printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
-      printf("Center Distance %d\n\r", CenterDistance);
+//        printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
+//        printf("Center Distance %d\n\r", CenterDistance);
 
-      TxChannel = 3; // 3 means no data
-      channel = (channel+1)%3;
-      OPT3101_StartMeasurementChannel(channel);
-      i = i + 1;
+        TxChannel = 3; // 3 means no data
+        channel = (channel+1)%3;
+        OPT3101_StartMeasurementChannel(channel);
+        i = i + 1;
+        }
+
+        Controller();
+        if(i >= 100)
+          i = 0;
+
+        WaitForInterrupt();
     }
-
-    Controller();
-    if(i >= 100)
-        i = 0;
-
-    WaitForInterrupt();
-  }
 }
 
 void recover(){
-    Motor_Backward(3000,3000);
+    //Motor_Backward(3000,3000);
     Clock_Delay1ms(2000);
     Motor_Stop();
     Clock_Delay1ms(500);

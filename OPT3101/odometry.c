@@ -10,7 +10,7 @@
 #include "../inc/Bump.h"
 #include "../inc/Clock.h"
 #include "../inc/blinker.h"
-uint32_t MotorFast=7000; // PWM for fast motions, out of 15000
+uint32_t MotorFast=6000; // PWM for fast motions, out of 15000
 uint32_t MotorSlow=5000; // PWM for slow motions, out of 15000
 void Odometry_SetPower(uint32_t fast, uint32_t slow){
   MotorFast=fast; ///< PWM for fast motions, out of 15000
@@ -184,31 +184,26 @@ void WaitUntilBumperTouched(void){uint32_t data;
 void StopUntilBumperTouched(void){
   Motor_Stop();
   Action = ISSTOPPED;
-  Display();
   WaitUntilBumperTouched();
 }
 void Forward(void){
   Action = GOFORWARD;
-  Blinker_Output(FR_LEFT+FR_RGHT);
-  Display();
   Motor_Forward(MotorFast,MotorFast);  // move
 }
+
 void HardLeft(void){
   Action = HARDLEFT;
   Blinker_Output(FR_LEFT+BK_LEFT);
-  Display();
   Motor_Left(MotorSlow,MotorSlow);  // left
 }
 void HardRight(void){
   Action = HARDRIGHT;
   Blinker_Output(FR_RGHT+BK_RGHT);
-  Display();
   Motor_Right(MotorSlow,MotorSlow);  // right
 }
 void SoftLeft(void){
   Action = SOFTLEFT;
   Blinker_Output(FR_LEFT+BK_LEFT);
-  Display();
   Motor_Forward(0,MotorSlow);  // left
 }
 void SoftRight(void){
@@ -259,8 +254,6 @@ void ForwardUntilXStart(int32_t thedesiredX){
 // true if done or error
 // false if still running ok
 uint32_t ForwardUntilXStatus(void){uint32_t data;
-  data = Bump_Read()+(LaunchPad_Input()<<6); // 8 bit switch inputs
-  if(data) return data;   // crash
   Error = desiredX-MyX;   // in 0.0001cm
   goal = abs(Error);      // in 0.0001cm
   if(goal > lastgoal){    // missed it, going wrong way??
@@ -278,7 +271,6 @@ uint32_t ForwardUntilY(int32_t desiredY){uint32_t data;
   int32_t badCount = 10;
   Forward();
   do{// wait for touch or Y position
-    data = Bump_Read()+(LaunchPad_Input()<<6); // 8 bit switch inputs
     Error = desiredY-MyY;   // in 0.0001cm
     goal = abs(Error);      // in 0.0001cm
     if(goal > lastgoal){
@@ -289,7 +281,6 @@ uint32_t ForwardUntilY(int32_t desiredY){uint32_t data;
     }
     lastgoal = goal;
   }while((data==0)&&(goal>XYTOLERANCE));
-  Display();
   return data; // reason for stopping, 0 means success
 }
 void ForwardUntilYStart(int32_t thedesiredY){
@@ -335,7 +326,6 @@ uint32_t SoftLeftUntilTh(int32_t desiredTh){uint32_t data;
     }
     lastgoal = goal;
   }while((data==0)&&(goal>THETATOLERANCE));
-  Display();
   return data; // reason for stopping, 0 means success
 }
 
