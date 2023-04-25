@@ -8,7 +8,7 @@
 #include "../inc/LaunchPad.h"
 #include "../inc/BumpInt.h"
 #include "../inc/Motor.h"
-#include "../inc/UART0.h"
+#include "UART0.h"
 #include "../inc/SSD1306.h"
 #include "../inc/FFT.h"
 #include "MQTTClient.h"
@@ -16,6 +16,8 @@
 #include "driverlib.h"
 #include "board.h"
 #include "sl_common.h"
+#include "stdio.h"
+#include "string.h"
 #include "../inc/odometry.h"
 #include "../inc/blinker.h"
 #include "../inc/Tachometer.h"
@@ -23,6 +25,7 @@
 #include "PID.h"
 #include "string.h"
 #include "stdio.h"
+
 // Prototype functions
 void collision(uint8_t);
 void recover();
@@ -371,6 +374,10 @@ int32_t Error;
 int32_t Ki=1000;  // integral controller gain
 int32_t Kp=5;  // proportional controller gain //was 4
 
+int32_t UR, UL;  // PWM duty 0 to 14,998
+char command;
+
+
 #define TOOCLOSE 200
 #define DESIRED 250
 int32_t SetPoint = 250;
@@ -533,35 +540,64 @@ void main(void){
   Mode = 1;
 
   while(1){
-    if(isCrash){
-          isCrash = 0;
-          publish_string(PUBLISH_TOPIC_STATUS, "Crashed");
-          Clock_Delay1ms(1000);
-      }
 
-    publish_string(PUBLISH_TOPIC_STATUS, "Running");
 
-    if (rc != 0) {
-      printf(" Failed to publish collision to MQTT broker \n\r");
-      LOOP_FOREVER();
-    }
-    printf(" Published collision successfully \n\r");
+
+    command = UART0_InChar(); //calling UART0_InChar function
+
     Odometry_Init(0,0,NORTH);
 
-    if(TxChannel <= 2){ // 0,1,2 means new data
-      if(TxChannel==0){
-        if(Amplitudes[0] > 1000){
-          LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
-        }else{
-          LeftDistance = FilteredDistances[0] = 500;
+    while(command == 'G') //if the input via Bluetooth is "G"
+    {
+        if(isCrash){
+              isCrash = 0;
+              publish_string(PUBLISH_TOPIC_STATUS, "Crashed");
+              Clock_Delay1ms(1000);
+          }
+
+        publish_string(PUBLISH_TOPIC_STATUS, "Running");
+
+        if (rc != 0) {
+          printf(" Failed to publish collision to MQTT broker \n\r");
+          LOOP_FOREVER();
         }
-      }else if(TxChannel==1){
-        if(Amplitudes[1] > 1000){
-          CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
-        }else{
-          CenterDistance = FilteredDistances[1] = 500;
+        printf(" Published collision successfully \n\r");
+        command = UART0_InCharNoWait();
+        if(command == 'S'){
+            Motor_Stop();
+            break;
         }
-      }else {
+        command = 'G';
+
+        if(TxChannel <= 2){ // 0,1,2 means new data
+          if(TxChannel==0){
+            if(Amplitudes[0] > 1000){
+              LeftDistance = FilteredDistances[0] = Left(LPF_Calc(Distances[0]));
+            }else{
+              LeftDistance = FilteredDistances[0] = 500;
+            }
+          }else if(TxChannel==1){
+            if(Amplitudes[1] > 1000){
+              CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
+            }else{
+              CenterDistance = FilteredDistances[1] = 500;
+            }
+          }else {
+            if(Amplitudes[2] > 1000){
+              RightDistance = FilteredDistances[2] = Right(LPF_Calc3(Distances[2]));
+            }else{
+              RightDistance = FilteredDistances[2] = 500;
+            }
+          }
+          printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
+          printf("Center Distance %d\n\r", CenterDistance);
+
+          TxChannel = 3; // 3 means no data
+          channel = (channel+1)%3;
+          OPT3101_StartMeasurementChannel(channel);
+          i = i + 1;
+        }
+      else {
         if(Amplitudes[2] > 1000){
           RightDistance = FilteredDistances[2] = LPF_Calc3(Distances[2]);
         }else{
@@ -645,7 +681,8 @@ void main(void){
     if(i >= 100)
         i = 0;
 
-    WaitForInterrupt();
+        WaitForInterrupt();
+    }
   }
 }
 
@@ -875,6 +912,4 @@ static _i32 initializeAppVariables()
 
     return SUCCESS;
 }
-
-
 

@@ -36,7 +36,11 @@ those of the authors and should not be interpreted as representing official
 policies, either expressed or implied, of the FreeBSD Project.
  */
 #include <stdint.h>
-
+#include "../inc/Motor.h"
+#include "stdio.h"
+#include "string.h"
+#include "../inc/UART0.h"
+#include "msp.h"
 
 //*********** DisableInterrupts ***************
 // disable interrupts
@@ -79,8 +83,8 @@ void EndCritical(void){
 // inputs:  none
 // outputs: none
 void WaitForInterrupt(void){
-  __asm  ("    WFI\n"
-          "    BX     LR\n");
+    __asm  ("    WFI\n"
+            "    BX     LR\n");
 }
 	
 

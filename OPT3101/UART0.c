@@ -89,6 +89,10 @@ char UART0_InChar(void){
   return((char)(EUSCI_A0->RXBUF));
 }
 
+char UART0_InCharNoWait(void){
+    return ((char)(EUSCI_A0->RXBUF));
+}
+
 //------------UART0_OutChar------------
 // Output 8-bit to serial port
 // Input: letter is an 8-bit ASCII character to be transferred
