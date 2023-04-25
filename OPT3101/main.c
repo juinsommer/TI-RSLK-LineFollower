@@ -105,6 +105,7 @@ Network n;
 Client hMQTTClient;     // MQTT Client
 
 uint8_t isCrash = 0;
+char command;
 
 unsigned char macAddressVal[SL_MAC_ADDR_LEN];
 unsigned char macAddressLen = SL_MAC_ADDR_LEN;
@@ -533,119 +534,131 @@ void main(void){
   Mode = 1;
 
   while(1){
-    if(isCrash){
-          isCrash = 0;
-          publish_string(PUBLISH_TOPIC_STATUS, "Crashed");
-          Clock_Delay1ms(1000);
-      }
 
-    publish_string(PUBLISH_TOPIC_STATUS, "Running");
 
-    if (rc != 0) {
-      printf(" Failed to publish collision to MQTT broker \n\r");
-      LOOP_FOREVER();
-    }
-    printf(" Published collision successfully \n\r");
+    command = UART0_InChar();
     Odometry_Init(0,0,NORTH);
 
-    if(TxChannel <= 2){ // 0,1,2 means new data
-      if(TxChannel==0){
-        if(Amplitudes[0] > 1000){
-          LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
-        }else{
-          LeftDistance = FilteredDistances[0] = 500;
-        }
-      }else if(TxChannel==1){
-        if(Amplitudes[1] > 1000){
-          CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
-        }else{
-          CenterDistance = FilteredDistances[1] = 500;
-        }
-      }else {
-        if(Amplitudes[2] > 1000){
-          RightDistance = FilteredDistances[2] = LPF_Calc3(Distances[2]);
-        }else{
-          RightDistance = FilteredDistances[2] = 500;
-        }
-      }
-      //printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
-      //printf("Center Distance %d\n\r", CenterDistance);
+    while(command == 'G'){
+        if(isCrash){
+              isCrash = 0;
+              publish_string(PUBLISH_TOPIC_STATUS, "Crashed");
+              Clock_Delay1ms(1000);
+          }
 
-      TxChannel = 3; // 3 means no data
-      channel = (channel+1)%3;
-      OPT3101_StartMeasurementChannel(channel);
-      i = i + 1;
+        publish_string(PUBLISH_TOPIC_STATUS, "Running");
+
+        if (rc != 0) {
+          printf(" Failed to publish collision to MQTT broker \n\r");
+          LOOP_FOREVER();
+        }
+        printf(" Published collision successfully \n\r");
+
+        command = UART0_InCharNoWait();
+        if(command == 'S'){
+            Motor_Stop();
+            break;
+        }
+        command = 'G';
+        if(TxChannel <= 2){ // 0,1,2 means new data
+          if(TxChannel==0){
+            if(Amplitudes[0] > 1000){
+              LeftDistance = FilteredDistances[0] = LPF_Calc(Distances[0]);
+            }else{
+              LeftDistance = FilteredDistances[0] = 500;
+            }
+          }else if(TxChannel==1){
+            if(Amplitudes[1] > 1000){
+              CenterDistance = FilteredDistances[1] = LPF_Calc2(Distances[1]);
+            }else{
+              CenterDistance = FilteredDistances[1] = 500;
+            }
+          }else {
+            if(Amplitudes[2] > 1000){
+              RightDistance = FilteredDistances[2] = LPF_Calc3(Distances[2]);
+            }else{
+              RightDistance = FilteredDistances[2] = 500;
+            }
+          }
+          //printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
+          //printf("Center Distance %d\n\r", CenterDistance);
+
+          TxChannel = 3; // 3 means no data
+          channel = (channel+1)%3;
+          OPT3101_StartMeasurementChannel(channel);
+          i = i + 1;
+        }
+
+        Controller();
+
+        //getting RPM
+        uint16_t *Actual_RPM;
+        int32_t Get_X, Get_Y, Get_Angle;
+        char Actual_Left[5], Actual_Right[5], X[5], Y[5], Angle[5];
+        getActual_Start();
+        Actual_RPM = getActual_End();
+        sprintf(Actual_Left, "%d", Actual_RPM[0]);
+        sprintf(Actual_Right, "%d", Actual_RPM[1]);
+        int rc0 = 0;
+        int rc1 = 0;
+        MQTTMessage msg0, msg1, msg_X, msg_Y, msg_Angle;
+        msg0.dup = 0;
+        msg0.id = 0;
+        msg0.payload = Actual_Left;
+        msg0.payloadlen = 4;
+        msg0.qos = QOS0;
+        msg0.retained = 0;
+        rc0 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Left, &msg0);
+
+        msg1.dup = 0;
+        msg1.id = 0;
+        msg1.payload = Actual_Right;
+        msg1.payloadlen = 4;
+        msg1.qos = QOS0;
+        msg1.retained = 0;
+        rc1 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Right, &msg1);
+
+        int rc_X = 0;
+        int rc_Y = 0;
+        int rc_Angle = 0;
+
+        Get_X = Odometry_GetX();
+        Get_Y = Odometry_GetY();
+        Get_Angle = Odometry_GetAngle();
+        sprintf(X, "%d", Get_X);
+        sprintf(Y, "%d", Get_Y);
+        sprintf(Angle, "%d", Get_Angle);
+
+        msg_X.dup = 0;
+        msg_X.id = 0;
+        msg_X.payload = X;
+        msg_X.payloadlen = 4;
+        msg_X.qos = QOS0;
+        msg_X.retained = 0;
+        rc_X = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_X, &msg_X);
+
+        msg_Y.dup = 0;
+        msg_Y.id = 0;
+        msg_Y.payload = Y;
+        msg_Y.payloadlen = 4;
+        msg_Y.qos = QOS0;
+        msg_Y.retained = 0;
+        rc_Y = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Y, &msg_Y);
+
+        msg_Angle.dup = 0;
+        msg_Angle.id = 0;
+        msg_Angle.payload = Angle;
+        msg_Angle.payloadlen = 4;
+        msg_Angle.qos = QOS0;
+        msg_Angle.retained = 0;
+        rc_Angle = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Angle, &msg_Angle);
+
+
+        if(i >= 100)
+            i = 0;
+
+        WaitForInterrupt();
     }
-
-    Controller();
-
-    //getting RPM
-    uint16_t *Actual_RPM;
-    int32_t Get_X, Get_Y, Get_Angle;
-    char Actual_Left[5], Actual_Right[5], X[5], Y[5], Angle[5];
-    getActual_Start();
-    Actual_RPM = getActual_End();
-    sprintf(Actual_Left, "%d", Actual_RPM[0]);
-    sprintf(Actual_Right, "%d", Actual_RPM[1]);
-    int rc0 = 0;
-    int rc1 = 0;
-    MQTTMessage msg0, msg1, msg_X, msg_Y, msg_Angle;
-    msg0.dup = 0;
-    msg0.id = 0;
-    msg0.payload = Actual_Left;
-    msg0.payloadlen = 4;
-    msg0.qos = QOS0;
-    msg0.retained = 0;
-    rc0 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Left, &msg0);
-
-    msg1.dup = 0;
-    msg1.id = 0;
-    msg1.payload = Actual_Right;
-    msg1.payloadlen = 4;
-    msg1.qos = QOS0;
-    msg1.retained = 0;
-    rc1 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Right, &msg1);
-
-    int rc_X = 0;
-    int rc_Y = 0;
-    int rc_Angle = 0;
-
-    Get_X = Odometry_GetX();
-    Get_Y = Odometry_GetY();
-    Get_Angle = Odometry_GetAngle();
-    sprintf(X, "%d", Get_X);
-    sprintf(Y, "%d", Get_Y);
-    sprintf(Angle, "%d", Get_Angle);
-
-    msg_X.dup = 0;
-    msg_X.id = 0;
-    msg_X.payload = X;
-    msg_X.payloadlen = 4;
-    msg_X.qos = QOS0;
-    msg_X.retained = 0;
-    rc_X = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_X, &msg_X);
-
-    msg_Y.dup = 0;
-    msg_Y.id = 0;
-    msg_Y.payload = Y;
-    msg_Y.payloadlen = 4;
-    msg_Y.qos = QOS0;
-    msg_Y.retained = 0;
-    rc_Y = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Y, &msg_Y);
-
-    msg_Angle.dup = 0;
-    msg_Angle.id = 0;
-    msg_Angle.payload = Angle;
-    msg_Angle.payloadlen = 4;
-    msg_Angle.qos = QOS0;
-    msg_Angle.retained = 0;
-    rc_Angle = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Angle, &msg_Angle);
-
-
-    if(i >= 100)
-        i = 0;
-
-    WaitForInterrupt();
   }
 }
 
