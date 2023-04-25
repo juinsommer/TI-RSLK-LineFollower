@@ -204,7 +204,6 @@ void main(void){
     Mode = 1;
 
     while(1){
-     // Odometry_Init(0,0, NORTH);
       if(TxChannel <= 2){ // 0,1,2 means new data
         if(TxChannel==0){
           if(Amplitudes[0] > 200){
