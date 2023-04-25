@@ -94,6 +94,9 @@ void UartClear(void){UART0_OutString("\n\r");};
 #define PUBLISH_TOPIC_STATUS "status"
 #define PUBLISH_TOPIC_RPM_Left "motor/left"
 #define PUBLISH_TOPIC_RPM_Right "motor/right"
+#define PUBLISH_TOPIC_X "odom/x"
+#define PUBLISH_TOPIC_Y "odom/y"
+#define PUBLISH_TOPIC_Angle "odom/angle"
 
 // MQTT message buffer size
 #define BUFF_SIZE 32
@@ -578,14 +581,15 @@ void main(void){
 
     //getting RPM
     uint16_t *Actual_RPM;
-    char Actual_Left[5], Actual_Right[5];
+    int32_t Get_X, Get_Y, Get_Angle;
+    char Actual_Left[5], Actual_Right[5], X[5], Y[5], Angle[5];
     getActual_Start();
     Actual_RPM = getActual_End();
     sprintf(Actual_Left, "%d", Actual_RPM[0]);
     sprintf(Actual_Right, "%d", Actual_RPM[1]);
     int rc0 = 0;
     int rc1 = 0;
-    MQTTMessage msg0, msg1;
+    MQTTMessage msg0, msg1, msg_X, msg_Y, msg_Angle;
     msg0.dup = 0;
     msg0.id = 0;
     msg0.payload = Actual_Left;
@@ -601,6 +605,42 @@ void main(void){
     msg1.qos = QOS0;
     msg1.retained = 0;
     rc1 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Right, &msg1);
+
+    int rc_X = 0;
+    int rc_Y = 0;
+    int rc_Angle = 0;
+
+    Get_X = Odometry_GetX();
+    Get_Y = Odometry_GetY();
+    Get_Angle = Odometry_GetAngle();
+    sprintf(X, "%d", Get_X);
+    sprintf(Y, "%d", Get_Y);
+    sprintf(Angle, "%d", Get_Angle);
+
+    msg_X.dup = 0;
+    msg_X.id = 0;
+    msg_X.payload = X;
+    msg_X.payloadlen = 4;
+    msg_X.qos = QOS0;
+    msg_X.retained = 0;
+    rc_X = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_X, &msg_X);
+
+    msg_Y.dup = 0;
+    msg_Y.id = 0;
+    msg_Y.payload = Y;
+    msg_Y.payloadlen = 4;
+    msg_Y.qos = QOS0;
+    msg_Y.retained = 0;
+    rc_Y = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Y, &msg_Y);
+
+    msg_Angle.dup = 0;
+    msg_Angle.id = 0;
+    msg_Angle.payload = Angle;
+    msg_Angle.payloadlen = 4;
+    msg_Angle.qos = QOS0;
+    msg_Angle.retained = 0;
+    rc_Angle = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_Angle, &msg_Angle);
+
 
     if(i >= 100)
         i = 0;
