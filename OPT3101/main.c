@@ -149,17 +149,11 @@ void Controller(void){ // runs at 100 Hz
             UL = 0;
             UR = PWMMAX;
         }
-        resultX = Odometry_GetX();
-        resultY = Odometry_GetY();
-        printf("Y pos: %d\n\r", resultY);
 
-        if(resultY < 108000000)
-            Motor_Forward(UL, UR);
 
-        else{
-            SoftLeftUntilTh(EAST);
-            Odometry_Init(0, 0, NORTH);
-        }
+        Motor_Forward(UL, UR);
+
+
      }
 }
 extern int32_t MyX,MyY;               // position in 0.0001cm
