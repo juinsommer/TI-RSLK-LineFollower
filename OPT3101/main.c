@@ -20,8 +20,9 @@
 #include "../inc/blinker.h"
 #include "../inc/Tachometer.h"
 #include "../inc/TimerA1.h"
-
-
+#include "PID.h"
+#include "string.h"
+#include "stdio.h"
 // Prototype functions
 void collision(uint8_t);
 void recover();
@@ -91,6 +92,8 @@ void UartClear(void){UART0_OutString("\n\r");};
  */
 #define MQTT_BROKER_SERVER  "broker.hivemq.com"
 #define PUBLISH_TOPIC_STATUS "status"
+#define PUBLISH_TOPIC_RPM_Left "motor/left"
+#define PUBLISH_TOPIC_RPM_Right "motor/right"
 
 // MQTT message buffer size
 #define BUFF_SIZE 32
@@ -364,7 +367,6 @@ int32_t Mode=0; // 0 stop, 1 run
 int32_t Error;
 int32_t Ki=1000;  // integral controller gain
 int32_t Kp=5;  // proportional controller gain //was 4
-int32_t UR, UL;  // PWM duty 0 to 14,998
 
 #define TOOCLOSE 200
 #define DESIRED 250
@@ -563,8 +565,8 @@ void main(void){
           RightDistance = FilteredDistances[2] = 500;
         }
       }
-      printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
-      printf("Center Distance %d\n\r", CenterDistance);
+      //printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
+      //printf("Center Distance %d\n\r", CenterDistance);
 
       TxChannel = 3; // 3 means no data
       channel = (channel+1)%3;
@@ -573,6 +575,33 @@ void main(void){
     }
 
     Controller();
+
+    //getting RPM
+    uint16_t *Actual_RPM;
+    char Actual_Left[5], Actual_Right[5];
+    getActual_Start();
+    Actual_RPM = getActual_End();
+    sprintf(Actual_Left, "%d", Actual_RPM[0]);
+    sprintf(Actual_Right, "%d", Actual_RPM[1]);
+    int rc0 = 0;
+    int rc1 = 0;
+    MQTTMessage msg0, msg1;
+    msg0.dup = 0;
+    msg0.id = 0;
+    msg0.payload = Actual_Left;
+    msg0.payloadlen = 4;
+    msg0.qos = QOS0;
+    msg0.retained = 0;
+    rc0 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Left, &msg0);
+
+    msg1.dup = 0;
+    msg1.id = 0;
+    msg1.payload = Actual_Right;
+    msg1.payloadlen = 4;
+    msg1.qos = QOS0;
+    msg1.retained = 0;
+    rc1 = MQTTPublish(&hMQTTClient, PUBLISH_TOPIC_RPM_Right, &msg1);
+
     if(i >= 100)
         i = 0;
 

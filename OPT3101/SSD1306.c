@@ -47,7 +47,7 @@ policies, either expressed or implied, of the FreeBSD Project.
 */
 #include <stdint.h>
 #include "msp.h"
-#include "SSD1306.h"
+#include "../inc/SSD1306.h"
 // Blue Adafruit 938 SSD1306 oLED (powered with 5V)
 // Signal        (SSD1306)     LaunchPad pin
 // UCA3SIMO      (Data, pin 1) connected to P9.7
