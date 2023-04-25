@@ -19,13 +19,13 @@ main.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/core_cm4.h
 main.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_compiler.h
 main.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/CMSIS/cmsis_ccs.h
 main.obj: /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Reflectance.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Clock.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Motor.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/LaunchPad.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/SysTickInts.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/CortexM.h
-main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/BumpInt.h
+main.obj: ../../inc/Reflectance.h
+main.obj: ../../inc/Clock.h
+main.obj: ../../inc/Motor.h
+main.obj: ../../inc/LaunchPad.h
+main.obj: ../../inc/SysTickInts.h
+main.obj: ../../inc/CortexM.h
+main.obj: ../../inc/BumpInt.h
 
 ../main.c:
 
@@ -65,17 +65,17 @@ main.obj: /home/juin/Downloads/ti/tirslk_max_1_00_02/inc/BumpInt.h
 
 /home/juin/ti/ccs1210/ccs/ccs_base/arm/include/system_msp432p401r.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Reflectance.h:
+../../inc/Reflectance.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Clock.h:
+../../inc/Clock.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/Motor.h:
+../../inc/Motor.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/LaunchPad.h:
+../../inc/LaunchPad.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/SysTickInts.h:
+../../inc/SysTickInts.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/CortexM.h:
+../../inc/CortexM.h:
 
-/home/juin/Downloads/ti/tirslk_max_1_00_02/inc/BumpInt.h:
+../../inc/BumpInt.h:
 

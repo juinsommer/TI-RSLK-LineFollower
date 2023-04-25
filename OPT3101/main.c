@@ -87,22 +87,22 @@ bool pollDistanceSensor(void){
 
 int32_t Mode=0; // 0 stop, 1 run
 int32_t Error;
-float Ki=.1;  // integral controller gain
-int32_t Kp=2;  // proportional controller gain //was 4
-float Kd=.01;
-float UR, UL;  // PWM duty 0 to 14,998
+int32_t Ki=.1;  // integral controller gain
+int32_t Kp=4;  // proportional controller gain //was 4
+uint32_t UR, UL;  // PWM duty 0 to 7500
 
 int32_t DESIRED = 500;
 int32_t SetPoint = 500;
 int32_t LeftDistance,CenterDistance,RightDistance; // mm
 uint32_t resultX, resultY;
+int32_t angle;
 
-#define PWMNOMINAL 5000 // was 2500
-#define SWING 500 //was 1000
+#define PWMNOMINAL 4000
+#define SWING 500
 #define PWMMIN 1000
-#define PWMMAX 5000
-#define AVOIDSETPOINT 350
-#define HARDAVOID 300
+#define PWMMAX 4000
+#define AVOIDSETPOINT 250
+#define HARDAVOID 200
 
 void Controller(void){ // runs at 100 Hz
     if(Mode){
@@ -130,29 +130,40 @@ void Controller(void){ // runs at 100 Hz
         if(UL < (PWMNOMINAL-SWING)) UL = PWMMIN; // 3,000 to 7,000
         if(UL > (PWMNOMINAL+SWING)) UL = PWMMAX;
 
+
         if((RightDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT) && (LeftDistance > AVOIDSETPOINT)){
+            angle = Odometry_GetAngle();
             UR = 0;
             UL = PWMMIN;
         }
 
         else if((LeftDistance < AVOIDSETPOINT) && (CenterDistance < AVOIDSETPOINT) && (RightDistance > AVOIDSETPOINT)){
+            angle = Odometry_GetAngle();
             UL = 0;
             UR = PWMMIN;
         }
 
         if((RightDistance < HARDAVOID) && (CenterDistance < HARDAVOID) && (LeftDistance > HARDAVOID)){
+            angle = Odometry_GetAngle();
             UR = 0;
             UL = PWMMAX;
         }
 
         else if((LeftDistance < HARDAVOID) && (CenterDistance < HARDAVOID) && (RightDistance > HARDAVOID)){
+            angle = Odometry_GetAngle();
             UL = 0;
             UR = PWMMAX;
         }
 
-
         Motor_Forward(UL, UR);
 
+        if(UR == 0){
+            SoftLeftUntilTh(angle);
+
+        }
+        else if(UL == 0){
+            SoftRightUntilTh(angle);
+        }
 
      }
 }
@@ -172,7 +183,6 @@ void main(void){
     I2CB1_Init(30); // baud rate = 12MHz/30=400kHz
     UART0_Initprintf();
 
-    Blinker_Init();
     Odometry_Init(0,0, NORTH);
     Action = ISSTOPPED;
     Tachometer_Init();
@@ -194,6 +204,7 @@ void main(void){
     Mode = 1;
 
     while(1){
+     // Odometry_Init(0,0, NORTH);
       if(TxChannel <= 2){ // 0,1,2 means new data
         if(TxChannel==0){
           if(Amplitudes[0] > 200){
@@ -214,8 +225,6 @@ void main(void){
             RightDistance = FilteredDistances[2] = 1000;
           }
         }
-//        printf("L Distance %d   R Distance %d\n\r", LeftDistance, RightDistance);
-//        printf("Center Distance %d\n\r", CenterDistance);
 
         TxChannel = 3; // 3 means no data
         channel = (channel+1)%3;
@@ -232,7 +241,7 @@ void main(void){
 }
 
 void recover(){
-    //Motor_Backward(3000,3000);
+    Motor_Backward(4000,4000);
     Clock_Delay1ms(2000);
     Motor_Stop();
     Clock_Delay1ms(500);
